@@ -1,0 +1,327 @@
+//
+//  PlaceDetailsViewController.m
+//  HereMatch
+//
+//  Created by Gulshan Bhatia on 9/3/11.
+//  Copyright 2011 ndkfn;l. All rights reserved.
+//
+
+#import "PlaceDetailsViewController.h"
+
+
+@implementation PlaceDetailsViewController
+@synthesize table, titleview;
+@synthesize PlaceTitle;
+@synthesize PlaceAdd;
+@synthesize PlaceCity;
+@synthesize placeid;
+
+#pragma mark - View lifecycle
+
+
+// Implement viewDidLoad to do additional setup after loading the view, typically from a nib.
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    self.view.backgroundColor = [UIColor groupTableViewBackgroundColor]; 
+    self.table.dataSource = self;
+    self.table.delegate = self;
+    arr_events = [[NSMutableArray alloc] init];
+    
+    [self.titleview.layer setBackgroundColor: [[UIColor whiteColor] CGColor]];
+    [self.titleview.layer setBorderColor: [[UIColor blackColor] CGColor]];
+    [self.titleview.layer setBorderWidth: 1.0];
+    [self.titleview.layer setCornerRadius:8.0f];
+    [self.titleview.layer setMasksToBounds:YES];
+    
+    btnCheckOut.hidden = YES;
+    btnCheckin.hidden = YES;
+    lblMsg.hidden = YES;
+    
+    self.table.hidden= YES;
+    
+}
+- (void)viewWillAppear:(BOOL)animated{
+    
+    
+    lblPlaceTitle.text = self.PlaceTitle;
+    lblPlaceAdd.text = self.PlaceAdd;
+    lblPlaceCity.text = self.PlaceCity;
+    
+    if (![[AppDelegate sharedInstance] isconnectedToNetwork:[NSString stringWithFormat:@"%@event_place_wise.php?place_id=%@",kWebServiceUrl,self.placeid]]) {
+        DisplayAlertWithTitle(@"Internet Connectivity Not Available.", @"herematch");
+        return;
+    }
+    
+    [[AppDelegate sharedInstance] showLoadingView];
+    [self performSelectorInBackground:@selector(downloadEvents) withObject:nil];
+    
+    //[[AppDelegate sharedInstance] showLoadingView];
+    //[self performSelectorInBackground:@selector(doCheckCheckIn) withObject:nil];
+    
+}
+- (void)downloadEvents{
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
+    //  For Calling Events List WebService
+    
+    
+    NSDateFormatter *dateFormatterwsformat =  [[NSDateFormatter alloc] init];    
+    [dateFormatterwsformat setDateFormat:@"yyyy-MM-dd HH:mm"];
+    
+    NSString * currentdate = [dateFormatterwsformat stringFromDate:[NSDate date]];
+    [dateFormatterwsformat release];
+    
+    NSString * urlstring = [NSString stringWithFormat:@"%@event_place_wise.php?place_id=%@&today=%@",kWebServiceUrl,self.placeid,currentdate];
+    NSURL *url = [NSURL URLWithString:[urlstring stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    
+    NSLog(@"url = %@",url);
+    
+    //NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@friend_list.php?username=%@",kWebServiceUrl,[AppDelegate sharedInstance].username]];
+    NSString * jsonRes = [NSString stringWithContentsOfURL:url encoding:NSUTF8StringEncoding error:nil];
+    NSLog(@"jsonREsponse = %@",jsonRes);
+    NSString * strmsg = [[jsonRes JSONValue] valueForKey:@"msg"];
+    NSLog(@"strmsg = %@",strmsg);
+    
+    if ([strmsg isEqualToString:@"Success"]) {
+        
+        [arr_events setArray:[[jsonRes JSONValue] valueForKey:@"Record"]];
+        //[tableview reloadData];
+        NSLog(@"no of Events %d",[arr_events count]);
+        NSLog(@"name = %@",[[arr_events objectAtIndex:0] valueForKey:@"name"]);
+    }
+    if ([arr_events count] < 1) {
+        self.table.hidden= YES;
+    }
+    else{
+        self.table.hidden= NO;
+    }
+    
+    
+    
+    [self performSelectorInBackground:@selector(doCheckCheckIn) withObject:nil];
+
+    //[[AppDelegate sharedInstance] hideLoadingView];
+  
+   
+    [table reloadData];
+    [pool release];
+
+}
+
+
+#pragma mark -
+#pragma mark UIAlertView delegate methods
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+	if (buttonIndex == 0) {
+        [self gotoMatchesView];
+        [self.navigationController popViewControllerAnimated:NO];
+        
+        
+		//[[AppDelegate sharedInstance] showLoadingView];
+		
+	}
+    else{
+        
+        
+    }
+    
+    
+}
+
+
+#pragma mark - Action Methods
+- (void)doconfrimation{
+    if (!confrimationalert) {
+        confrimationalert = [[UIAlertView alloc] initWithTitle:@"herematch" message:@"Check In Successful." delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil];
+    }
+    [confrimationalert show];
+}
+
+- (IBAction) btn_checkIn:(id) sender{
+    
+    if (![[AppDelegate sharedInstance] isconnectedToNetwork:[NSString stringWithFormat:@"%@event_place_wise.php?place_id=%@",kWebServiceUrl,self.placeid]]) {
+        DisplayAlertWithTitle(@"Internet Connectivity Not Available.", @"herematch");
+        return;
+    }
+    
+    [[AppDelegate sharedInstance] showLoadingView];
+    [self performSelectorInBackground:@selector(doCheckIn) withObject:nil];
+}
+- (IBAction) btn_checkOut:(id) sender{
+    
+    if (![[AppDelegate sharedInstance] isconnectedToNetwork:[NSString stringWithFormat:@"%@event_place_wise.php?place_id=%@",kWebServiceUrl,self.placeid]]) {
+        DisplayAlertWithTitle(@"Internet Connectivity Not Available.", @"herematch");
+        return;
+    }
+    
+    [[AppDelegate sharedInstance] showLoadingView];
+    [self performSelectorInBackground:@selector(doCheckOut) withObject:nil];
+}
+- (void) doCheckIn{
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
+    
+    NSString * urlstring = [NSString stringWithFormat:@"%@place_check_in.php?lat=24&long=45&place_id=%@&user_id=%d",kWebServiceUrl,self.placeid,[AppDelegate sharedInstance].UserId];
+    NSURL *url = [NSURL URLWithString:[urlstring stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    
+    
+    //NSURL *url = [NSURL URLWithString:];
+    NSLog(@"checkin url = %@",url);
+    NSString  *jsonRes = [NSString stringWithContentsOfURL:url encoding:NSUTF8StringEncoding error:nil];
+    NSLog(@"jsonREsponse Checkin = %@",jsonRes);
+    NSString * strlogin = [(NSString *)[jsonRes JSONValue] valueForKey:@"msg"];
+    
+    //if ([strlogin isEqualToString:@"Success"]) {
+    [[AppDelegate sharedInstance] hideLoadingView];
+    [self performSelectorOnMainThread:@selector(doconfrimation) withObject:nil waitUntilDone:YES];
+    
+    
+    
+    //}
+    //[[AppDelegate sharedInstance] hideLoadingView];
+    
+    
+    [pool release];
+    
+}
+- (void) doCheckOut{
+    
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
+    
+    NSString * urlstring = [NSString stringWithFormat:@"%@place_check_out.php?place_id=%@&user_id=%d",kWebServiceUrl,self.placeid,[AppDelegate sharedInstance].UserId];
+    NSURL *url = [NSURL URLWithString:[urlstring stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    
+    
+    //NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@event_check_out.php?event_id=%@&user_id=%d",kWebServiceUrl,self.EventId,[AppDelegate sharedInstance].UserId]];
+    NSString  *jsonRes = [NSString stringWithContentsOfURL:url encoding:NSUTF8StringEncoding error:nil];
+    NSLog(@"jsonREsponse CheckOut= %@",jsonRes);
+    NSString * strlogin = [(NSString *)[jsonRes JSONValue] valueForKey:@"msg"];
+    
+    if ([strlogin isEqualToString:@"Success"]) {
+        [[AppDelegate sharedInstance] hideLoadingView];
+        DisplayAlertWithTitle(@"Check Out Successful.", @"herematch");
+        [self.navigationController popViewControllerAnimated:YES];
+    }    
+    
+    
+    [pool release];
+    
+}
+- (void) doCheckCheckIn{
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@user_check_place.php?place_id=%@&user_id=%d",kWebServiceUrl,self.placeid,[AppDelegate sharedInstance].UserId]];
+    NSString  *jsonRes = [NSString stringWithContentsOfURL:url encoding:NSUTF8StringEncoding error:nil];
+    NSLog(@"jsonREsponse  do checkin = %@ and url  = %@",jsonRes,url);
+    NSString * strlogin = [(NSString *)[jsonRes JSONValue] valueForKey:@"msg"];
+    
+    if ([strlogin isEqualToString:@"Yes"]) {
+        
+		btnCheckOut.hidden = NO;
+        btnCheckin.hidden = YES;
+        lblMsg.hidden = YES;
+        
+        
+    }
+//    else if ([strlogin isEqualToString:@"No"]) {
+//		
+//        btnCheckOut.hidden = YES;
+//        btnCheckin.hidden = YES;
+//        lblMsg.text = [NSString stringWithFormat:@"You Are Already Checkin in %@",[(NSString *)[jsonRes JSONValue] valueForKey:@"place_name"]];
+//        lblMsg.hidden = NO;
+//	}
+    else{
+        
+        btnCheckOut.hidden = YES;
+        btnCheckin.hidden = NO;
+        lblMsg.hidden = YES;
+        
+    }
+    
+    
+    
+    [[AppDelegate sharedInstance] hideLoadingView];
+    
+    [pool release];
+}
+
+- (void) gotoMatchesView {
+    
+    [self.tabBarController setSelectedIndex:1]; 
+    //    FBWebView * webviewobj = [[FBWebView alloc] initWithNibName:@"FBWebView" bundle:nil];
+    //    [self presentModalViewController:webviewobj animated:YES];
+}
+#pragma mark -
+#pragma mark Table view data source
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    // Return the number of sections.
+    return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    // Return the number of rows in the section.
+    return [arr_events count];
+   
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
+    
+    if ([arr_events count]) {
+        return @"Events";
+    }
+    else{
+        return @"";
+    }
+        
+    
+}
+
+// Customize the appearance of table view cells.
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+//    static NSString *CellIdentifier = @"Cell";
+//    
+//    UITableViewCell * cell = (UITableViewCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+//    if (cell == nil) {
+//        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
+//    }
+    MatchesListCell *cell = [MatchesListCell dequeOrCreateInTable:tableView];            
+    cell.lblTitle.text = [[arr_events objectAtIndex:indexPath.row] valueForKey:@"name"];
+    //cell.detailTextLabel.text = [[arr_events objectAtIndex:indexPath.row] valueForKey:@"place_name"];
+    cell.imgUser.image = [UIImage imageNamed:@"event.png"];
+    //cell.accessoryType = UITableViewCellAccessoryDetailDisclosureButton;
+      	
+    return cell;
+}
+
+
+
+#pragma mark -
+#pragma mark Table view delegate
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+	
+    EventDetailsViewController * eventdetailsobj = [[EventDetailsViewController alloc] initWithNibName:@"EventDetailsView" bundle:nil];
+    
+    eventdetailsobj.EventTitle = [[arr_events objectAtIndex:indexPath.row] valueForKey:@"name"];
+    eventdetailsobj.EventStart = [[arr_events objectAtIndex:indexPath.row] valueForKey:@"start"];
+    eventdetailsobj.EventEnd = [[arr_events objectAtIndex:indexPath.row] valueForKey:@"end"];
+    eventdetailsobj.EventId = [[arr_events objectAtIndex:indexPath.row] valueForKey:@"id"];
+    
+    
+    [self.navigationController pushViewController:eventdetailsobj animated:YES];
+    [eventdetailsobj release]; 
+}
+
+
+- (void)dealloc
+{
+    [table release];
+    [titleview release];
+    [arr_events release];
+    [super dealloc];
+}
+@end
+

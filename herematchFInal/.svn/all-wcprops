@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 37
+/svn/herematch/!svn/ver/249/HereMatch
+END
+InfoPlist.strings
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/herematch/!svn/ver/249/HereMatch/InfoPlist.strings
+END
+main.m
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/herematch/!svn/ver/250/HereMatch/main.m
+END
+HereMatch-Info.plist
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/herematch/!svn/ver/249/HereMatch/HereMatch-Info.plist
+END
+HereMatch-Prefix.pch
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/herematch/!svn/ver/249/HereMatch/HereMatch-Prefix.pch
+END

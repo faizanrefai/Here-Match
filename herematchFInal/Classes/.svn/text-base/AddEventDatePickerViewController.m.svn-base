@@ -1,0 +1,157 @@
+//
+//  AddEventDatePickerViewController.m
+//  HereMatch
+//
+//  Created by Gulshan Bhatia on 9/6/11.
+//  Copyright 2011 ndkfn;l. All rights reserved.
+//
+
+#import "AddEventDatePickerViewController.h"
+
+
+@implementation AddEventDatePickerViewController
+
+@synthesize groupview;
+@synthesize lblstdate;
+@synthesize lblenddate;
+@synthesize swallday;
+
+
+
+
+
+
+
+#pragma mark - View lifecycle
+
+// Implement viewDidLoad to do additional setup after loading the view, typically from a nib.
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    self.view.backgroundColor = [UIColor groupTableViewBackgroundColor];
+    [self.groupview.layer setBackgroundColor: [[UIColor whiteColor] CGColor]];
+    [self.groupview.layer setBorderColor: [[UIColor grayColor] CGColor]];
+    [self.groupview.layer setBorderWidth: 1.0];
+    [self.groupview.layer setCornerRadius:8.0f];
+    [self.groupview.layer setMasksToBounds:YES];
+    
+    startdate = [[NSDate date] retain];
+    enddate = [[NSDate date] retain];
+    
+    NSLog(@"current date = %@",startdate);
+    
+}
+#pragma mark - Action Methods
+- (IBAction) ShowDatePikerView:(id) sender {
+
+    
+    UIActionSheet *ActionSheet = [[UIActionSheet alloc] initWithTitle:@"Select Date\n\n\n\n\n\n\n\n\n\n\n\n" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:@"Set" otherButtonTitles:nil];
+       
+    ActionSheet.actionSheetStyle = UIActionSheetStyleBlackOpaque;
+    //ActionSheet.transform = CGAffineTransformMakeRotation(M_PI);
+    
+    [ActionSheet setBounds:CGRectMake(0, 0, 320, 250)];
+    dtPicker = [[UIDatePicker alloc] init];
+    
+      
+    
+    UIButton * btn = sender;
+    dtPicker.tag = btn.tag;
+    ActionSheet.tag = btn.tag;
+   
+    if (btn.tag==1) {
+        [dtPicker setDate:startdate];
+        [startdate release];
+    }
+    else {
+        [dtPicker setDate:enddate];
+        [enddate release];
+    }
+                
+
+    
+    //[dtPicker addTarget:self action:@selector(setTextDate:) forControlEvents:UIControlEventValueChanged];
+    
+    [ActionSheet addSubview:dtPicker];
+    [ActionSheet showInView:self.parentViewController.tabBarController.view];
+    [dtPicker release];
+    [ActionSheet release];
+
+}
+-(IBAction)setTextDate:(id)sender {
+    
+     
+    NSDateFormatter *dateFormatter =  [[NSDateFormatter alloc] init];    
+    [dateFormatter setDateFormat:@"MM-dd-yyyy hh:mm a"];
+    
+    
+    NSDateFormatter *dateFormatterwsformat =  [[NSDateFormatter alloc] init];    
+    [dateFormatterwsformat setDateFormat:@"yyyy-MM-dd HH:mm"];
+    
+	
+    UIDatePicker * tempbtn = sender;
+    if (tempbtn.tag==1) {
+        
+        
+        //startdate = [[dtPicker date] retain];
+        
+        self.lblstdate.text = [dateFormatter stringFromDate:[dtPicker date]];
+        [AppDelegate sharedInstance].AddEventStartDateWsFormatted = [dateFormatterwsformat stringFromDate:[dtPicker date]];
+    }
+    else{
+        
+        //enddate = [[dtPicker date] retain];
+        
+        self.lblenddate.text = [dateFormatter stringFromDate:[dtPicker date]];
+        [AppDelegate sharedInstance].AddEventEndDateWsFormatted = [dateFormatterwsformat stringFromDate:[dtPicker date]];
+    }
+    
+    [dateFormatter release];
+    [dateFormatterwsformat release];
+        
+} 
+#pragma mark -
+#pragma mark UIActionSheet delegate methods
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+	
+    if (buttonIndex == 0) 
+    {
+        [self setTextDate:[actionSheet viewWithTag:actionSheet.tag]];
+        
+    }	
+	else{
+        if (actionSheet.tag==1) {
+            [startdate retain];
+        }
+        else{
+            [enddate retain];
+        }
+        
+    }
+}
+- (IBAction) btnDone_Click:(id) sender {
+    
+    if ([self.lblstdate.text length] == 0 || [self.lblenddate.text length] == 0) {
+		DisplayAlertWithTitle(@"Please Select Start and End Dates",@"HereMatch");
+        
+	}
+    else {
+        [AppDelegate sharedInstance].AddEventStartDate = self.lblstdate.text;
+        [AppDelegate sharedInstance].AddEventEndDate = self.lblenddate.text;
+        
+        [self.navigationController popViewControllerAnimated:YES];    
+    }
+    
+}
+- (void)dealloc
+{
+    [super dealloc];
+    [groupview release];
+    [lblenddate release];
+    [lblstdate release];
+    [swallday release];
+    
+}
+@end

@@ -1,0 +1,37 @@
+//
+//  AddEventDatePickerViewController.h
+//  HereMatch
+//
+//  Created by Gulshan Bhatia on 9/6/11.
+//  Copyright 2011 ndkfn;l. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import <QuartzCore/QuartzCore.h>
+#import "AppConstat.h"
+#import "AppDelegate.h"
+
+
+@interface AddEventDatePickerViewController : UIViewController <UIActionSheetDelegate>{
+    IBOutlet UIView   * groupview;
+    IBOutlet UILabel  * lblstdate;
+    IBOutlet UILabel  * lblenddate;
+    IBOutlet UISwitch * swallday;
+    
+    NSDate * startdate;
+    NSDate * enddate;
+    
+    UIDatePicker * dtPicker;
+}
+@property (nonatomic, retain) IBOutlet UIView   * groupview;
+@property (nonatomic, retain) IBOutlet UILabel  * lblstdate;
+@property (nonatomic, retain) IBOutlet UILabel  * lblenddate;
+@property (nonatomic, retain) IBOutlet UISwitch * swallday;
+
+
+
+- (IBAction) ShowDatePikerView:(id) sender;
+- (IBAction) btnDone_Click:(id) sender;
+
+
+@end
